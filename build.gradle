@@ -1,0 +1,25 @@
+plugins {
+    id 'application'
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17) // Ensure you're using Java 11 or compatible
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation files('lib/JMapViewer.jar')
+    implementation files('lib/osm4j-core-1.4.0.jar')
+    implementation files('lib/osm4j-pbf-1.4.0.jar')
+    
+}
+
+application {
+    mainClass = 'Main'
+}

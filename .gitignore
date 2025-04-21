@@ -1,0 +1,28 @@
+# Ignore build files
+/build
+/dist
+/out
+
+
+*.o
+*.obj
+*.exe
+*.class
+# *.jar
+*.war
+*.pyc
+*.pyo
+*.log
+*.tmp
+
+# Static files
+*.log
+*.lock
+
+# Editor directories and files
+.vscode/
+.gradle/
+
+# Miscellaneous
+*.zip
+*.tar.gz
