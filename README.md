@@ -29,25 +29,25 @@ OpenStreetMap Path Finder is a Java-based application that allows users to inter
 ## Project Structure
 
 ```bash
-build.gradle
-README.md
-.gitignore
-.gradle/
-.vscode/
-build/
+
 lib/
+    JMapViewer.jar
 src/
     main/
         java/
-            controller/
-                PathController.java
-            model/
-                Graph.java
-                Node.java
-                Edge.java
-            view/
-                MapPanel.java
-            Main.java
+        |    controller/
+        |    |    PathController.java
+        |    model/
+        |    |    Graph.java
+        |    |    Node.java
+        |    |    Edge.java
+        |    view/
+        |    |    MapPanel.java
+        |    Main.java
+
+build.gradle
+.gitignore
+README.md
 ```
 
 ### Key Files
@@ -73,8 +73,6 @@ The project relies on the following libraries:
 
 ---
 
-## Installation
-
 ### Prerequisites
 
 - Java Development Kit (JDK) 8 or higher.
@@ -84,17 +82,20 @@ The project relies on the following libraries:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/your-repo.git
-   cd your-repo
+   git clone https://github.com/BEKI77/Path-Finder.git
+   cd Path-Finder
    ```
 2. Ensure the required JAR files are present in the lib/ directory:
    JMapViewer.jar
 
 3. Compile the project:
+
    - it's preferable if you use gradle for development
+
    ```bash
    gradle build
    gradle run
+
    ```
 
 ### Usage
@@ -126,7 +127,7 @@ Core Components
 
 - The Main class initializes the application, creating the map panel and graph.
 - The PathController is instantiated to handle user interactions.
-  = When the user selects two points, the application calculates the shortest path and displays it.
+- When the user selects two points, the application calculates the shortest path and displays it.
 
 ### Contributing
 
