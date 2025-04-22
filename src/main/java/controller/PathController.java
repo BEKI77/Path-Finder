@@ -24,7 +24,6 @@ public class PathController {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 Coordinate coord = (Coordinate) mapPanel.getPosition(evt.getX(), evt.getY());
 
-                // Find nearest node within 0.001 degrees
                 Node clickedNode = null;
                 double minDist = 100;
                 System.out.println(coord);

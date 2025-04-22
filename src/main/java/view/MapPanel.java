@@ -1,27 +1,147 @@
 package view;
 
 import org.openstreetmap.gui.jmapviewer.*;
+import org.openstreetmap.gui.jmapviewer.events.JMVCommandEvent;
+import org.openstreetmap.gui.jmapviewer.interfaces.JMapViewerEventListener;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapPolygon;
+import org.openstreetmap.gui.jmapviewer.tilesources.OsmTileSource;
+
 import model.Node;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.BorderLayout;
+import javax.swing.JPanel;
+// import java.awt.event.MouseWheelEvent;
+import javax.swing.JLabel;
 import java.util.List;
 
-public class MapPanel extends JMapViewer {
+public class MapPanel extends JPanel implements JMapViewerEventListener {
+    private static final long serialVersionUID = 1L;
+
+    private JMapViewerTree treeMap;
+    private JLabel zoomLabel;
+    private JLabel zoomValue;
+    private JLabel mperpLabelName;
+    private JLabel mperpLabelValue;
+
     private static final Color PATH_COLOR = new Color(0, 100, 255, 180);
     private static final Color START_COLOR = new Color(0, 200, 0, 200);
     private static final Color END_COLOR = new Color(200, 0, 0, 200);
     private static final Color NODE_COLOR = new Color(100, 100, 100, 150);
 
+    // Ethiopia's bounding coordinates
+    private static final double ETHIOPIA_MIN_LAT = 3.4;
+    private static final double ETHIOPIA_MAX_LAT = 14.9;
+    private static final double ETHIOPIA_MIN_LON = 33.0;
+    private static final double ETHIOPIA_MAX_LON = 48.0;
+    private static final Coordinate ETHIOPIA_CENTER = new Coordinate(9.1, 40.5);
+    private static final int ETHIOPIA_ZOOM_LEVEL = 6;
+
+    /**
+     * Setups the JFrame layout, sets some default options for the JMapViewerTree
+     * and displays a map in the window.
+     */
+    public MapPanel() {
+        super();
+        setLayout(new BorderLayout()); // Set the layout for the panel
+        treeMap = new JMapViewerTree("Zones");
+        setupPanels();
+
+        // Listen to the map viewer for user operations
+        map().addJMVListener(this);
+        setDisplayPosition(ETHIOPIA_CENTER, ETHIOPIA_ZOOM_LEVEL);
+        // Set some options for the map viewer
+        map().setTileSource(new OsmTileSource.Mapnik());
+        map().setTileLoader(new OsmTileLoader(map()));
+        map().setMapMarkerVisible(true);
+        map().setZoomControlsVisible(true);
+
+        // Activate map in the panel
+        treeMap.setTreeVisible(true);
+        add(treeMap, BorderLayout.CENTER);
+    }
+
+    private JMapViewer map() {
+        return treeMap.getViewer();
+    }
+
+    private void removeAllMapMarkers() {
+        map().removeAllMapMarkers();
+    }
+
+    /**
+     * Sets the display position of the map to the given coordinate and zoom level.
+     * 
+     * @param coordinate The coordinate to center the map on.
+     * @param zoom       The zoom level to set.
+     */
+    private void setDisplayPosition(Coordinate coordinate, int zoom) {
+        map().setDisplayPosition(coordinate, zoom);
+    }
+
+    private void removeAllMapPolygons() {
+        map().removeAllMapPolygons();
+    }
+
+    /**
+     * Adds a map polygon to the map viewer.
+     * 
+     * @param polygon The polygon to add.
+     */
+    private void addMapPolygon(MapPolygon polygon) {
+        map().addMapPolygon(polygon);
+    }
+
+    /**
+     * Sets up additional panels and components for the JFrame.
+     */
+    private void setupPanels() {
+        zoomLabel = new JLabel("Zoom: ");
+        zoomValue = new JLabel(String.valueOf(map().getZoom()));
+        mperpLabelName = new JLabel("Meters/Pixels: ");
+        mperpLabelValue = new JLabel(String.valueOf(map().getMeterPerPixel()));
+
+        // Add these components to the JFrame or a specific panel as needed
+        // Example:
+        JPanel panel = new JPanel();
+        panel.add(zoomLabel);
+        panel.add(zoomValue);
+        panel.add(mperpLabelName);
+        panel.add(mperpLabelValue);
+        add(panel, BorderLayout.NORTH);
+    }
+
+    /**
+     * @param args Main program arguments
+     */
+
+    @Override
+    public void processCommand(JMVCommandEvent command) {
+        // ...
+    }
+
+    // public MapPanel() {
+    // super();
+    //
+
+    // }
+
+    public Coordinate getPosition(int x, int y) {
+        return (Coordinate) map().getPosition(x, y);
+    }
+
     public void displayPaths(List<List<Node>> paths) {
         this.removeAllMapMarkers();
         this.removeAllMapPolygons();
 
-        if (paths == null || paths.isEmpty())
+        if (paths == null || paths.isEmpty()) {
+            // Reset to Ethiopia view when no paths
+            setDisplayPosition(ETHIOPIA_CENTER, ETHIOPIA_ZOOM_LEVEL);
             return;
+        }
 
-        // Define colors for multiple paths
+        // Rest of your existing displayPaths method...
         Color[] pathColors = { PATH_COLOR, new Color(255, 100, 0, 180), new Color(100, 255, 0, 180) };
         int colorIndex = 0;
 
@@ -29,7 +149,6 @@ public class MapPanel extends JMapViewer {
             if (path == null || path.isEmpty())
                 continue;
 
-            // Add markers for all nodes in the current path
             for (int i = 0; i < path.size(); i++) {
                 Node node = path.get(i);
                 MapMarker marker;
@@ -46,66 +165,25 @@ public class MapPanel extends JMapViewer {
                 }
 
                 marker.getStyle().setBackColor(Color.WHITE);
-                this.addMapMarker(marker);
+                map().addMapMarker(marker);
             }
 
-            // Draw path lines for the current path
             Color currentPathColor = pathColors[colorIndex % pathColors.length];
+
             for (int i = 1; i < path.size(); i++) {
                 Node from = path.get(i - 1);
                 Node to = path.get(i);
 
-                MapPolygon line = new MapPolygonImpl(
-                        from.getCoordinate(),
-                        to.getCoordinate());
+                MapPolygon line = new MapPolygonImpl(from.getCoordinate(), to.getCoordinate());
                 line.getStyle().setColor(currentPathColor);
                 line.getStyle().setStroke(new BasicStroke(4));
                 this.addMapPolygon(line);
             }
 
             colorIndex++;
+
         }
 
-        // Zoom to fit all paths
-        zoomToPaths(paths);
-    }
-
-    private void zoomToPaths(List<List<Node>> paths) {
-        if (paths.isEmpty())
-            return;
-
-        double minLat = Double.MAX_VALUE;
-        double maxLat = Double.MIN_VALUE;
-        double minLon = Double.MAX_VALUE;
-        double maxLon = Double.MIN_VALUE;
-
-        for (List<Node> path : paths) {
-            for (Node node : path) {
-                minLat = Math.min(minLat, node.getLat());
-                maxLat = Math.max(maxLat, node.getLat());
-                minLon = Math.min(minLon, node.getLon());
-                maxLon = Math.max(maxLon, node.getLon());
-            }
-        }
-
-        // Add some padding
-        double latPadding = (maxLat - minLat) * 0.2;
-        double lonPadding = (maxLon - minLon) * 0.2;
-
-        double centerLat = (minLat + maxLat) / 2;
-        double centerLon = (minLon + maxLon) / 2;
-
-        int zoomLevel = getBestZoomLevel(minLat - latPadding, maxLat + latPadding, minLon - lonPadding,
-                maxLon + lonPadding);
-
-        this.setDisplayPosition(new Coordinate(centerLat, centerLon), zoomLevel);
-    }
-
-    private int getBestZoomLevel(double minLat, double maxLat, double minLon, double maxLon) {
-        // Calculate an appropriate zoom level based on the bounding box
-        // This is a placeholder; you may need to implement logic based on your map
-        // viewer's API
-        return 10; // Example zoom level
     }
 
 }
