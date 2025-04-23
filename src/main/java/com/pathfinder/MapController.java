@@ -1,7 +1,6 @@
 package com.pathfinder;
 
 import javafx.scene.web.WebEngine;
-// import netscape.javascript.JSObject;
 
 import java.util.List;
 
@@ -13,6 +12,7 @@ public class MapController {
     }
 
     public void drawRoute(List<double[]> coordinates) {
+
         StringBuilder jsArray = new StringBuilder("[");
         for (double[] coord : coordinates) {
             jsArray.append("[").append(coord[0]).append(",").append(coord[1]).append("],");
@@ -22,4 +22,5 @@ public class MapController {
         jsArray.append("]");
         webEngine.executeScript("drawRoute(" + jsArray + ");");
     }
+
 }

@@ -11,26 +11,77 @@
 </head>
 <body>
   <div id="map"></div>
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([9.03, 38.74], 13);
+    const map = L.map('map', {
+      center: [9.03, 38.74],
+      zoom: 13,
+      maxBounds: [
+        [8.85, 38.65],     // Southwest corner (latitude, longitude)
+        [9.15, 38.85]
+      ],
+      maxBoundsViscosity: 1.0
+    });
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Route layer
-    let routeLayer;
+    const bounds = [
+      [8.85, 38.65], // Southwest corner (latitude, longitude)
+      [9.15, 38.85] // Northeast corner (latitude, longitude)
+    ];
+
+
+    map.setMaxBounds(bounds);
+
+    map.setMinZoom(14); // Minimum zoom level
+    map.setMaxZoom(15); // Maximum zoom level
+
+    map.fitBounds(bounds);
+
+    let startMarker, endMarker, routeLayer;
+    let clickCount = 0;
+    let startPoint, endPoint;
 
     function drawRoute(coords) {
       if (routeLayer) {
         map.removeLayer(routeLayer);
       }
       routeLayer = L.polyline(coords, { color: 'blue' }).addTo(map);
-      map.fitBounds(routeLayer.getBounds());
     }
 
-    // Example call from Java:
-    // drawRoute([[9.03, 38.74], [9.04, 38.75]]);
+
+    map.on('click', function(e) {
+      const latlng = [e.latlng.lat, e.latlng.lng];
+
+      if (clickCount === 0) {
+        if (startMarker) map.removeLayer(startMarker);
+        
+        startMarker = L.marker(latlng).addTo(map).bindPopup('Start').openPopup();
+        startPoint = latlng;
+        clickCount++;
+      } else if (clickCount === 1) {
+          
+          if (endMarker) map.removeLayer(endMarker);
+          
+          endMarker = L.marker(latlng).addTo(map).bindPopup('End').openPopup();
+          endPoint = latlng;
+          clickCount = 0;
+
+        // Notify Java
+        if (typeof javaConnector !== 'undefined') {
+                javaConnector.logCoordinates(latlng[0], latlng[1]);
+        }
+
+        // For demo, draw route
+        drawRoute([startPoint, endPoint]);
+      }
+    });
+
+    
+
   </script>
 </body>
 </html>
