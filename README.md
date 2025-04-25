@@ -55,21 +55,12 @@ build.gradle
 README.md
 ```
 
-### Key Files
-
-- **`Main.java`**: The entry point of the application. Sets up the GUI and initializes the map and graph.
-- **`PathController.java`**: Handles user interactions with the map, such as selecting points and finding paths.
-- **`Graph.java`**: Represents the graph structure, including nodes and edges.
-- **`Node.java`**: Represents a node in the graph with latitude, longitude, and an identifier.
-- **`MapPanel.java`**: A custom Swing component for rendering the map using JMapViewer.
-
----
-
 ## Dependencies
 
 The project relies on the following libraries:
 
 - You need to download the javafx library....here is the link : https://gluonhq.com/products/javafx/ you may need to change the Operating System and Architecture to your specific need.
+- The version should be 17.\* that is the one that worked for me
 - And also store the downloaded and extracted file inside the lib/ directory under the name javafx-sdk-17!!!
 
 ---
