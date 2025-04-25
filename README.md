@@ -31,19 +31,24 @@ OpenStreetMap Path Finder is a Java-based application that allows users to inter
 ```bash
 
 lib/
-    JMapViewer.jar
+   | javafx-sdk-17/
+   |  |   lib/
+   |  |   |    javafx.base.jar
+   |  |   |    javafx.fxml.jar
+   |  |   |    javafx.controls.jar
+   |  |   |    javafx.graphics.jar
+   |  |   |    javafx.web.jar
 src/
     main/
-        java/
-        |    controller/
-        |    |    PathController.java
-        |    model/
-        |    |    Graph.java
-        |    |    Node.java
-        |    |    Edge.java
-        |    view/
-        |    |    MapPanel.java
-        |    Main.java
+      |  java/
+      |  |    com/
+      |  |    |   /pathfinder
+      |  |    |    |  GraphHopperClient.java
+      |  |    |    |  JavaConnector.java
+      |  |    |    |  Main.java
+      |  |    |    |  MapController.java
+      |  resources
+      |  |    map.html
 
 build.gradle
 .gitignore
@@ -64,19 +69,15 @@ README.md
 
 The project relies on the following libraries:
 
-1. **JMapViewer**: A Java Swing component for rendering OpenStreetMap tiles.
-   - Location: `lib/JMapViewer.jar`
-2. **osm4j-core**: A library for working with OpenStreetMap data.
-   - Location: `lib/osm4j-core-1.4.0.jar`
-3. **osm4j-pbf**: A library for parsing OpenStreetMap PBF files.
-   - Location: `lib/osm4j-pbf-1.4.0.jar`
+- You need to download the javafx library....here is the link : https://gluonhq.com/products/javafx/ you may need to change the Operating System and Architecture to your specific need.
+- And also store the downloaded and extracted file inside the lib/ directory under the name javafx-sdk-17!!!
 
 ---
 
 ### Prerequisites
 
-- Java Development Kit (JDK) 8 or higher.
-- Gradle (optional, for building the project).
+- Java Development Kit (JDK) 17.
+- Gradle.
 
 ### Steps
 
@@ -86,7 +87,6 @@ The project relies on the following libraries:
    cd Path-Finder
    ```
 2. Ensure the required JAR files are present in the lib/ directory:
-   JMapViewer.jar
 
 3. Compile the project:
 
