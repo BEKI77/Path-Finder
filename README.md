@@ -67,7 +67,7 @@ The project relies on the following libraries:
 
 ### Prerequisites
 
-- Java Development Kit (JDK) 17.
+- Java Development Kit (JDK) 17 and above.
 - Gradle.
 
 ### Steps

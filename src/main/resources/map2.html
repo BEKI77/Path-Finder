@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Leaflet Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    html, body, #map { height: 100%; margin: 0; }
+  </style>
+</head>
+<body>
+    <div id="map" style="height: 100%; width: 100%;"></div>
+    <button id="button" onclick="onMapClick({ latlng: map.getCenter() })">click me</button>
+    <p id="var"></p>
+    <p id="xcoor"></p>
+    <p id="ycoor"></p>
+    <p id="returnVal"></p>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-geojson-vt"></script>
+    <script>
+        window.console.log = function(message) {
+            if (window.javaConnector) {
+                window.javaConnector.log(message);
+            }
+        };
+
+        const map = L.map('map', {
+            center: [(8.87899 + 8.89832) / 2, (38.79519 + 38.82888) / 2],
+            zoom: 15,
+            minZoom: 16, 
+            maxZoom: 16,
+            maxBounds: [
+                [8.87899, 38.79519],     
+                [8.89832, 38.82888]
+            ],
+            maxBoundsViscosity: 1.0
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let message = 'Called';
+
+        function onMapClick(e) {
+            document.getElementById("var").innerText = message;
+            document.getElementById("xcoor").innerText = e.latlng.lat;
+            document.getElementById("ycoor").innerText = e.latlng.lng;
+            document.getElementById("returnVal").innerText = javaConnector.getCount();  
+            console.log(e.latlng.lat +','+e.latlng.lng);   
+            javaConnector.logCoordinates( e.latlng.lat, e.latlng.lng)
+        }
+
+        map.on('click', onMapClick);
+
+        const bounds = [
+            [8.87899, 38.79519],     
+            [8.89832, 38.82888]
+        ];
+
+
+        map.setMaxBounds(bounds);
+        map.fitBounds(bounds);
+
+        function loadGeoJson(geoJson) {
+            console.log("data:" , JSON.stringify(geoJson, null, 2));
+            const data = geoJson;
+            // console.log("GeoJSON data loaded:", data);
+
+            // Example: Add the GeoJSON to a Leaflet map
+            L.geoJSON(data, {
+                pointToLayer: function(feature, latlng) {
+                    const marker = L.marker(latlng);
+                    if( feature.properties && feature.properties.name){
+                        marker.bindPopup(feature.properties.name);
+                    }
+                    return marker;
+                }
+                
+            }).addTo(map);
+        }
+
+        // fetch('AASTU.geojson')
+        // .then(response => response.json())
+        // .then(data => {
+        //     L.geoJSON(data, {
+        //         filter: function(feature) {
+        //             return feature.geometry.type === 'Point';
+        //         },
+        //         pointToLayer: function(feature, latlng) {
+        //             const marker = L.marker(latlng);
+        //             if( feature.properties && feature.properties.name){
+        //                 marker.bindPopup(feature.properties.name);
+        //             }
+        //             return marker;
+        //         }
+                
+        //     }).addTo(map);
+        // });
+
+    </script>
+</body>
+</html>

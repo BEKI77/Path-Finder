@@ -1,6 +1,7 @@
 package com.pathfinder;
 
 import javafx.scene.web.WebEngine;
+import netscape.javascript.JSObject;
 
 import java.util.List;
 
@@ -9,6 +10,13 @@ public class MapController {
 
     public MapController(WebEngine engine) {
         this.webEngine = engine;
+
+        webEngine.documentProperty().addListener((obs, oldDoc, newDoc) -> {
+            if (newDoc != null) {
+                JSObject window = (JSObject) webEngine.executeScript("window");
+                window.setMember("javaConnector", new JavaConnector());
+            }
+        });
     }
 
     public void drawRoute(List<double[]> coordinates) {
