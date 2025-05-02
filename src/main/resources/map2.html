@@ -29,22 +29,23 @@
             shadowSize: [41, 41], // Size of the shadow
         });
 
-
+        
         const map = L.map('map', {
             center: [(8.87899 + 8.89832) / 2, (38.79519 + 38.82888) / 2],
-            zoom: 15,
+            zoomControl: false,
+            zoom: 16,
             minZoom: 16, 
             maxZoom: 16,
             maxBounds: [
                 [8.87899, 38.79519],     
                 [8.89832, 38.82888]
             ],
-            maxBoundsViscosity: 1.0
+            maxBoundsViscosity: 1.0,
+            fadeAnimation:true,
+            preferCanvas: true
         });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         const bounds = [
             [8.87899, 38.79519],     
@@ -94,6 +95,18 @@
                     const res = JSON.parse(nearCoor);
                     const nearEndMarker = L.marker([res.lat, res.lon], { icon: customIcon }).addTo(map).bindPopup("Near End Point").openPopup();
                     markers.push(nearEndMarker);
+                    const chk = window.javaGraph.findAllPaths(startCoord.lng, startCoord.lat, endCoord.lng, endCoord.lat);
+                    console.log(chk);
+                    L.geoJSON(JSON.parse(chk), {
+                        pointToLayer: function(feature, latlng) {
+                            const marker = L.marker(latlng);
+                            if( feature.properties && feature.properties.name){
+                                marker.bindPopup(feature.properties.name);
+                            }
+                            return marker;
+                        }
+                
+                    }).addTo(map);
                     
                 }
                 
@@ -106,7 +119,7 @@
 
 
         function loadGeoJson(geoJson) {
-            console.log("data:" , JSON.stringify(geoJson, null, 2));
+            console.log("data:" , geoJson);
             const data = geoJson;
             L.geoJSON(data, {
                 pointToLayer: function(feature, latlng) {

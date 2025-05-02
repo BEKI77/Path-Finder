@@ -4,6 +4,7 @@ import java.util.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class Graph {
 
@@ -88,30 +89,104 @@ public class Graph {
         return nearest;
     }
 
-    public List<List<Point>> findAllPaths(Point startClicked, Point endClicked) {
-        Point start = findNearestNode(startClicked);
-        Point end = findNearestNode(endClicked);
+    public String findAllPaths(double startClickedLon, double startClickedLat, double endClickedLon,
+            double endClickedLat) {
+        Point tmpStart = new Point(startClickedLat, startClickedLon);
+        Point tmpEnd = new Point(endClickedLat, endClickedLon);
+
+        Point start = findNearestNode(tmpStart);
+        Point end = findNearestNode(tmpEnd);
+
+        System.out.println(startClickedLat + " " + startClickedLat);
 
         List<List<Point>> allPaths = new ArrayList<>();
-        dfs(start, end, new HashSet<>(), new ArrayList<>(), allPaths);
-        return allPaths;
+        dfs(start, end, allPaths);
+
+        return convertPathsToGeoJson(allPaths);
     }
 
-    private void dfs(Point current, Point end, Set<Point> visited, List<Point> path, List<List<Point>> allPaths) {
-        visited.add(current);
-        path.add(current);
+    private void dfs(Point start, Point end, List<List<Point>> allPaths) {
+        Stack<PathState> stack = new Stack<>();
+        Set<Point> visited = new HashSet<>();
+        visited.add(start);
 
-        if (current.equals(end)) {
-            allPaths.add(new ArrayList<>(path));
-        } else {
-            for (Point neighbor : graph.getOrDefault(current, List.of())) {
-                if (!visited.contains(neighbor)) {
-                    dfs(neighbor, end, visited, path, allPaths);
+        stack.push(new PathState(start, new ArrayList<>()));
+
+        while (!stack.isEmpty()) {
+            PathState currentState = stack.pop();
+            Point current = currentState.current;
+            List<Point> path = currentState.path;
+
+            path.add(current);
+
+            if (current.equals(end)) {
+                allPaths.add(path);
+                System.out.println("Found one path: " + path);
+                return;
+            } else {
+                for (Point neighbor : graph.get(current)) {
+                    if (!visited.contains(neighbor)) {
+                        visited.add(neighbor);
+                        List<Point> newPath = new ArrayList<>(path);
+                        stack.push(new PathState(neighbor, newPath));
+                    }
                 }
             }
         }
 
-        path.remove(path.size() - 1);
-        visited.remove(current);
+    }
+
+    public String convertPathsToGeoJson(List<List<Point>> allPaths) {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode featureCollection = mapper.createObjectNode();
+        featureCollection.put("type", "FeatureCollection");
+
+        ArrayNode featuresArray = mapper.createArrayNode();
+
+        for (List<Point> path : allPaths) {
+            ObjectNode feature = mapper.createObjectNode();
+            feature.put("type", "Feature");
+
+            // Geometry object
+            ObjectNode geometry = mapper.createObjectNode();
+            geometry.put("type", "LineString");
+            ArrayNode coordinates = mapper.createArrayNode();
+
+            for (Point point : path) {
+                ArrayNode coord = mapper.createArrayNode();
+                coord.add(point.lon); // GeoJSON = [lon, lat]
+                coord.add(point.lat);
+                coordinates.add(coord);
+            }
+
+            geometry.set("coordinates", coordinates);
+            feature.set("geometry", geometry);
+
+            // Optional: add properties
+            ObjectNode properties = mapper.createObjectNode();
+            properties.put("pathLength", path.size());
+            feature.set("properties", properties);
+
+            featuresArray.add(feature);
+        }
+
+        featureCollection.set("features", featuresArray);
+
+        try {
+            return mapper.writeValueAsString(featureCollection);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "{}";
+        }
+    }
+}
+
+class PathState {
+    Point current;
+    List<Point> path;
+
+    PathState(Point current, List<Point> path) {
+        this.current = current;
+        this.path = path;
     }
 }
