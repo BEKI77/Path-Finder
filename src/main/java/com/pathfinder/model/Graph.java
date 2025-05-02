@@ -8,11 +8,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class Graph {
 
-    private final Map<Point, List<Point>> graph = new HashMap<>();
+    private static Map<Point, List<WightedEdge>> graph = new HashMap<>();
 
     private void addEdge(Point a, Point b) {
-        graph.computeIfAbsent(a, k -> new ArrayList<>()).add(b);
-        graph.computeIfAbsent(b, k -> new ArrayList<>()).add(a);
+        double weight = haversine(a.lat, a.lon, b.lat, b.lon);
+        graph.computeIfAbsent(a, k -> new ArrayList<>()).add(new WightedEdge(b, weight));
+        graph.computeIfAbsent(b, k -> new ArrayList<>()).add(new WightedEdge(a, weight));
     }
 
     private void processLineString(JsonNode coords) {
@@ -48,7 +49,6 @@ public class Graph {
             }
         }
 
-        // System.out.println(graph);
     }
 
     public String chk(double x, double y) {
@@ -101,7 +101,7 @@ public class Graph {
 
         List<List<Point>> allPaths = new ArrayList<>();
         dfs(start, end, allPaths);
-
+        dijkstra(start, end, allPaths);
         return convertPathsToGeoJson(allPaths);
     }
 
@@ -124,16 +124,48 @@ public class Graph {
                 System.out.println("Found one path: " + path);
                 return;
             } else {
-                for (Point neighbor : graph.get(current)) {
-                    if (!visited.contains(neighbor)) {
-                        visited.add(neighbor);
+                for (WightedEdge neighbor : graph.get(current)) {
+                    if (!visited.contains(neighbor.target)) {
+                        visited.add(neighbor.target);
                         List<Point> newPath = new ArrayList<>(path);
-                        stack.push(new PathState(neighbor, newPath));
+                        stack.push(new PathState(neighbor.target, newPath));
                     }
                 }
             }
         }
 
+    }
+
+    public void dijkstra(Point start, Point end, List<List<Point>> allPaths) {
+        Map<Point, Double> distances = new HashMap<>();
+        PriorityQueue<Point> pq = new PriorityQueue<>(Comparator.comparingDouble(distances::get));
+        Map<Point, Point> previous = new HashMap<>();
+
+        for (Point node : graph.keySet()) {
+            distances.put(node, Double.MAX_VALUE);
+        }
+        distances.put(start, 0.0);
+        pq.add(start);
+
+        while (!pq.isEmpty()) {
+            Point current = pq.poll();
+
+            for (WightedEdge edge : graph.get(current)) {
+                double newDist = distances.get(current) + edge.weight;
+                if (newDist < distances.get(edge.target)) {
+                    distances.put(edge.target, newDist);
+                    previous.put(edge.target, current);
+                    pq.add(edge.target);
+                }
+            }
+        }
+
+        List<Point> path = new ArrayList<>();
+        for (Point at = end; at != null; at = previous.get(at)) {
+            path.add(at);
+        }
+        Collections.reverse(path);
+        allPaths.add(path);
     }
 
     public String convertPathsToGeoJson(List<List<Point>> allPaths) {
@@ -178,6 +210,17 @@ public class Graph {
             e.printStackTrace();
             return "{}";
         }
+    }
+
+    private double haversine(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Radius of the Earth in kilometers
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in kilometers
     }
 }
 
