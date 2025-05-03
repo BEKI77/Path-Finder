@@ -1,6 +1,6 @@
-# OpenStreetMap Path Finder
+# AASTU Path Finder
 
-OpenStreetMap Path Finder is a Java-based application that allows users to interact with a map, select two points, and calculate the shortest path between them. The application uses OpenStreetMap data for map rendering and provides a graphical user interface for user interaction.
+AASTU Path Finder is a Java-based application that allows users to interact with a map, select two points, and calculate the shortest path between them. The application uses OpenStreetMap data for map rendering and provides a graphical user interface for user interaction.
 
 ## Table of Contents
 
@@ -19,10 +19,15 @@ OpenStreetMap Path Finder is a Java-based application that allows users to inter
 
 - Interactive map using OpenStreetMap tiles.
 - Ability to select two points on the map:
-  - Left-click to set the start point.
-  - Right-click to set the end point.
+  - Right-click to set the start and end points.
 - Calculates and displays the shortest path between the selected points.
 - Simple and intuitive graphical user interface.
+
+---
+
+## Demo
+
+![Demo](Demo.webm)
 
 ---
 
@@ -43,12 +48,13 @@ src/
       |  java/
       |  |    com/
       |  |    |   /pathfinder
-      |  |    |    |  GraphHopperClient.java
-      |  |    |    |  JavaConnector.java
+      |  |    |      /model
+      |  |    |    |    Graph.java
+      |  |    |    |    Point.java
+      |  |    |    |    WightedEdge.java
       |  |    |    |  Main.java
-      |  |    |    |  MapController.java
       |  resources
-      |  |    map.html
+      |  |    MapData.geojson
 
 build.gradle
 .gitignore
@@ -107,17 +113,16 @@ Core Components
 
 2. Map Interaction:
 
-   - The MapPanel class (based on JMapViewer) renders the map and allows users to interact with it.
-   - The PathController listens for mouse events to capture user input and determine the selected points.
+   - The MapView class renders the map and allows users to interact with it.
+   - It listens for mouse events to capture user input and determine the selected points.
 
 3. Shortest Path Calculation:
 
-   - The PathController calculates the shortest path between the start and end nodes using the graph's edges and nodes.
+   - The Graph class calculates the shortest path between the start and end nodes using the graph's WightedEdges.
 
 ### Workflow
 
 - The Main class initializes the application, creating the map panel and graph.
-- The PathController is instantiated to handle user interactions.
 - When the user selects two points, the application calculates the shortest path and displays it.
 
 ### Contributing
