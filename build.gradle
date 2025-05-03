@@ -14,6 +14,7 @@ repositories {
 def javafxSdkPath = file('lib/javafx-sdk-17/lib').absolutePath
 
 dependencies {
+    implementation("com.gluonhq:maps:2.0.0-ea+6")
     implementation files('lib/javafx-sdk-17/lib/javafx.controls.jar')
     implementation files('lib/javafx-sdk-17/lib/javafx.web.jar')
     implementation files('lib/javafx-sdk-17/lib/javafx.base.jar')

@@ -1,71 +1,123 @@
 package com.pathfinder;
 
+import com.gluonhq.maps.*;
 import com.pathfinder.model.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.application.Application;
-import javafx.beans.value.ObservableValue;
-import javafx.concurrent.Worker;
-import javafx.scene.web.*;
+import javafx.geometry.Point2D;
 import javafx.scene.Scene;
+import javafx.scene.Node;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 import javafx.stage.Stage;
-import netscape.javascript.JSObject;
-import javafx.beans.value.ChangeListener;
+
 import com.fasterxml.jackson.databind.node.*;
 import com.fasterxml.jackson.databind.*;
 
 public class Main extends Application {
-    public WebView webView;
-    public WebEngine engine;
+    private List<MapLayer> layers = new ArrayList<>();
+
+    public MapView mapView;
     public String geoJson;
-    public JSObject window;
-    public JavaConnector tmp;
     public ArrayNode features;
+    public Point startCoord;
+    public Point endCoord;
     Graph graph;
 
     @Override
     public void start(Stage primaryStage) {
         this.graph = new Graph();
-
-        this.webView = new WebView();
-        this.engine = this.webView.getEngine();
-
-        this.engine.setJavaScriptEnabled(true);
-
-        this.engine.load(getClass().getResource("/map2.html").toExternalForm());
-
-        this.engine.setConfirmHandler(null);
-
         initializeGraph();
 
-        this.engine.getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
-            @Override
-            public void changed(ObservableValue<? extends Worker.State> observable, Worker.State oldValue,
-                    Worker.State newValue) {
-                if (newValue == Worker.State.SUCCEEDED) {
-                    System.out.println("Change happend");
-                    initializeJavaBridge(engine);
-                }
-            }
-        });
+        this.mapView = new MapView();
+        this.mapView.setZoom(16);
+        this.mapView.setCenter(new MapPoint(8.888655, 38.812035));
 
-        Scene scene = new Scene(webView, 1000, 1000);
-        primaryStage.setTitle("Path Finder");
+        this.mapView.setOnMouseClicked((event -> {
+
+            if (event.getButton() == javafx.scene.input.MouseButton.PRIMARY) {
+
+                Point2D screenPoint = new Point2D(event.getX(), event.getY());
+                MapPoint mapPoint = mapView.getMapPosition(screenPoint.getX(), screenPoint.getY());
+
+                if (this.startCoord == null) {
+
+                    this.startCoord = new Point(mapPoint.getLatitude(), mapPoint.getLongitude());
+
+                } else {
+
+                    this.endCoord = new Point(mapPoint.getLatitude(), mapPoint.getLongitude());
+                    Point startNearest = this.graph.findNearestNode(this.startCoord);
+                    Point endNearest = this.graph.findNearestNode(this.endCoord);
+
+                    for (MapLayer layer : this.layers) {
+                        this.mapView.removeLayer(layer);
+                    }
+
+                    MarkerRed customLayer1 = new MarkerRed(new MapPoint(startNearest.lat, startNearest.lon),
+                            Color.GREEN);
+
+                    this.layers.add(customLayer1);
+                    this.mapView.addLayer(customLayer1);
+                    customLayer1.layoutLayer();
+
+                    MarkerRed customLayer2 = new MarkerRed(new MapPoint(endNearest.lat, endNearest.lon),
+                            Color.DARKGREEN);
+
+                    this.layers.add(customLayer2);
+                    this.mapView.addLayer(customLayer2);
+                    customLayer2.layoutLayer();
+
+                    System.out.println("Start Nearest Points:" + startNearest.lat + " " + startNearest.lon);
+                    System.out.println("End Nearest Points: " + endNearest.lat + " " + endNearest.lon);
+
+                    List<List<Point>> result = this.graph.findAllPaths(startNearest.lon,
+                            startNearest.lat,
+                            endNearest.lon,
+                            endNearest.lat);
+
+                    updateRoadLayer(result);
+
+                    startCoord = null;
+                    endCoord = null;
+                }
+
+            }
+        }));
+
+        Scene scene = new Scene(mapView, 1000, 900);
+        primaryStage.setTitle("AASTU Path Finder");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    private void initializeJavaBridge(WebEngine engine) {
-        this.window = (JSObject) engine.executeScript("window");
-        this.tmp = new JavaConnector();
-        this.window.setMember("javaConnector", this.tmp);
-        this.window.setMember("javaGraph", this.graph);
-        System.out.println("JavaConnector mounted");
+    private void updateRoadLayer(List<List<Point>> allPath) {
+        for (List<Point> coords : allPath) {
+            List<MapPoint> pathPoints = new ArrayList<>();
+
+            for (Point coord : coords) {
+                double lon = coord.lon;
+                double lat = coord.lat;
+                pathPoints.add(new MapPoint(lat, lon));
+            }
+
+            PathLayer roadLayer = new PathLayer(pathPoints);
+            this.layers.add(roadLayer);
+            this.mapView.addLayer(roadLayer);
+            roadLayer.layoutLayer();
+        }
     }
 
     private void initializeGraph() {
         try {
-            InputStream inputStream = getClass().getResourceAsStream("/AASTU.geojson");
+            InputStream inputStream = getClass().getResourceAsStream("/MapData.geojson");
 
             if (inputStream == null) {
                 System.err.println("GeoJSON file not found!");
@@ -80,33 +132,66 @@ public class Main extends Application {
             this.features = (ArrayNode) geoJsonObject.get("features");
 
             this.graph.buildFromGeoJson(this.features);
-
+            System.out.println("The Graph: " + this.graph);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // private void loadGeoJson(ArrayNode data) {
-    // try {
-    // if (this.features == null) {
-    // System.err.println("GeoJSON file not found!");
-    // return;
-    // }
-
-    // ObjectMapper mapper = new ObjectMapper();
-    // ObjectNode geoJsonObject = (ObjectNode) mapper.readTree(this.geoJson);
-    // geoJsonObject.set("features", data);
-
-    // String dataSentToBeDisplayed = mapper.writeValueAsString(geoJsonObject);
-
-    // engine.executeScript("loadGeoJson(" + dataSentToBeDisplayed + ");");
-
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // }
-    // }
-
     public static void main(String[] args) {
         launch(args);
+    }
+
+    public class MarkerRed extends MapLayer {
+        private MapPoint point;
+        private Color color = Color.GREEN;
+
+        public MarkerRed(MapPoint coord, Color col) {
+            this.color = col;
+            this.point = coord;
+            System.out.println(this.point.getLatitude() + " " + this.point.getLongitude());
+        }
+
+        @Override
+        protected void layoutLayer() {
+            getChildren().clear();
+            Node icon = new Circle(5, color);
+            Point2D mapPoint = getMapPoint(point.getLatitude(), point.getLongitude());
+            icon.setVisible(true);
+            icon.setTranslateX(mapPoint.getX());
+            icon.setTranslateY(mapPoint.getY());
+
+            getChildren().add(icon);
+        }
+    }
+
+    public class PathLayer extends MapLayer {
+        private List<MapPoint> pathPoints;
+
+        public PathLayer(List<MapPoint> pathCoords) {
+            this.pathPoints = pathCoords;
+        }
+
+        @Override
+        protected void layoutLayer() {
+            getChildren().clear();
+
+            Path path = new Path();
+            path.setVisible(true);
+            path.setStroke(Color.BLUE);
+            path.setStrokeWidth(2);
+            boolean first = true;
+
+            for (MapPoint coord : pathPoints) {
+                Point2D point = getMapPoint(coord.getLatitude(), coord.getLongitude());
+                if (first) {
+                    path.getElements().add(new MoveTo(point.getX(), point.getY()));
+                    first = false;
+                } else {
+                    path.getElements().add(new LineTo(point.getX(), point.getY()));
+                }
+            }
+            getChildren().add(path);
+        }
     }
 }

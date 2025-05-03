@@ -36,44 +36,17 @@ public class Graph {
             switch (type) {
                 case "LineString" -> {
                     processLineString(geometry.get("coordinates"));
-                    break;
                 }
                 case "MultiLineString" -> {
                     for (JsonNode line : geometry.get("coordinates")) {
                         processLineString(line);
                     }
-                    break;
                 }
                 default -> {
                 }
             }
         }
 
-    }
-
-    public String chk(double x, double y) {
-        Point nearest = null;
-        double minDist = Double.MAX_VALUE;
-        for (Point node : graph.keySet()) {
-            double dist = Math.pow(x - node.lat, 2) + Math.pow(y - node.lon, 2);
-            if (dist < minDist) {
-                minDist = dist;
-                nearest = node;
-            }
-        }
-
-        System.out.println("Nearest Point: " + nearest.lat + " " + nearest.lon);
-        Map<String, Double> result = new HashMap<>();
-        result.put("lat", nearest.lat);
-        result.put("lon", nearest.lon);
-
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.writeValueAsString(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "{}";
-        }
     }
 
     public Point findNearestNode(Point clicked) {
@@ -89,7 +62,7 @@ public class Graph {
         return nearest;
     }
 
-    public String findAllPaths(double startClickedLon, double startClickedLat, double endClickedLon,
+    public List<List<Point>> findAllPaths(double startClickedLon, double startClickedLat, double endClickedLon,
             double endClickedLat) {
         Point tmpStart = new Point(startClickedLat, startClickedLon);
         Point tmpEnd = new Point(endClickedLat, endClickedLon);
@@ -97,15 +70,16 @@ public class Graph {
         Point start = findNearestNode(tmpStart);
         Point end = findNearestNode(tmpEnd);
 
-        System.out.println(startClickedLat + " " + startClickedLat);
+        // System.out.println(startClickedLat + " " + startClickedLon);
+        // System.out.println(endClickedLat + " " + endClickedLon);
 
         List<List<Point>> allPaths = new ArrayList<>();
-        dfs(start, end, allPaths);
         dijkstra(start, end, allPaths);
-        return convertPathsToGeoJson(allPaths);
+
+        return allPaths;
     }
 
-    private void dfs(Point start, Point end, List<List<Point>> allPaths) {
+    public void dfs(Point start, Point end, List<List<Point>> allPaths) {
         Stack<PathState> stack = new Stack<>();
         Set<Point> visited = new HashSet<>();
         visited.add(start);
@@ -121,7 +95,7 @@ public class Graph {
 
             if (current.equals(end)) {
                 allPaths.add(path);
-                System.out.println("Found one path: " + path);
+                // System.out.println("Found one path: " + path);
                 return;
             } else {
                 for (WightedEdge neighbor : graph.get(current)) {
