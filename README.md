@@ -27,7 +27,7 @@ AASTU Path Finder is a Java-based application that allows users to interact with
 
 ## Demo
 
-![Demo](/src/main/resources/Demo.mp4)
+![Demo](/src/main/resources/Demo.gif)
 
 ---
 
