@@ -65,9 +65,8 @@ README.md
 
 The project relies on the following libraries:
 
-- You need to download the javafx library....here is the link : https://gluonhq.com/products/javafx/ you may need to change the Operating System and Architecture to your specific need.
-- The version should be 17.\* that is the one that worked for me
-- And also store the downloaded and extracted file inside the lib/ directory under the name javafx-sdk-17!!!
+- JavaFx
+- GluonMaps
 
 ---
 
@@ -99,7 +98,7 @@ The project relies on the following libraries:
 
     1. Launch the application.
     2. Follow the on-screen instructions:
-    3. Left-click on the map to set the start point.
+    3. Right-click on the map to set the start point.
     4. Right-click on the map to set the end point.
     5. The application will calculate and display the shortest path between the two points.
 
@@ -109,7 +108,7 @@ Core Components
 
 1. Graph Representation:
 
-   - The graph is represented using the Graph class, which contains nodes (Node objects) and edges (connections between nodes with weights).
+   - The graph is represented using the Graph class, which contains Point (Point objects) and WightedEdges (connections between nodes with weights).
 
 2. Map Interaction:
 

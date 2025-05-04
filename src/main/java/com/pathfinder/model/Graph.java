@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class Graph {
 
     private static Map<Point, List<WightedEdge>> graph = new HashMap<>();
+    public double totDistance;
 
     private void addEdge(Point a, Point b) {
         double weight = haversine(a.lat, a.lon, b.lat, b.lon);
@@ -70,9 +71,6 @@ public class Graph {
         Point start = findNearestNode(tmpStart);
         Point end = findNearestNode(tmpEnd);
 
-        // System.out.println(startClickedLat + " " + startClickedLon);
-        // System.out.println(endClickedLat + " " + endClickedLon);
-
         List<List<Point>> allPaths = new ArrayList<>();
         dijkstra(start, end, allPaths);
 
@@ -95,7 +93,6 @@ public class Graph {
 
             if (current.equals(end)) {
                 allPaths.add(path);
-                // System.out.println("Found one path: " + path);
                 return;
             } else {
                 for (WightedEdge neighbor : graph.get(current)) {
@@ -138,6 +135,10 @@ public class Graph {
         for (Point at = end; at != null; at = previous.get(at)) {
             path.add(at);
         }
+
+        this.totDistance = distances.get(end);
+        System.out.println("Total distance: " + distances.get(end));
+
         Collections.reverse(path);
         allPaths.add(path);
     }

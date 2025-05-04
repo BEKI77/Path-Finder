@@ -10,6 +10,9 @@ import java.util.List;
 import javafx.application.Application;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -40,6 +43,27 @@ public class Main extends Application {
         this.mapView.setZoom(16);
         this.mapView.setCenter(new MapPoint(8.888655, 38.812035));
 
+        Label startLabel = new Label("Start: not selected");
+        Label endLabel = new Label("End: not selected");
+        Label distance = new Label("Distance in Km: 0");
+
+        startLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
+        endLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
+
+        VBox infoBox = new VBox(5, startLabel, endLabel, distance);
+
+        infoBox.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9);" +
+                "-fx-padding: 12;" +
+                "-fx-border-color:rgb(0, 61, 102);" +
+                "-fx-border-width: 2;" +
+                "-fx-border-radius: 8;" +
+                "-fx-background-radius: 8;" +
+                "-fx-font-size: 14px;" +
+                "-fx-font-weight: bold;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0.5, 0, 2);");
+        infoBox.setMaxWidth(200);
+        infoBox.setMaxHeight(80);
+
         this.mapView.setOnMouseClicked((event -> {
 
             if (event.getButton() == javafx.scene.input.MouseButton.PRIMARY) {
@@ -49,24 +73,30 @@ public class Main extends Application {
 
                 if (this.startCoord == null) {
 
-                    this.startCoord = new Point(mapPoint.getLatitude(), mapPoint.getLongitude());
-
-                } else {
-
-                    this.endCoord = new Point(mapPoint.getLatitude(), mapPoint.getLongitude());
-                    Point startNearest = this.graph.findNearestNode(this.startCoord);
-                    Point endNearest = this.graph.findNearestNode(this.endCoord);
-
                     for (MapLayer layer : this.layers) {
                         this.mapView.removeLayer(layer);
                     }
 
+                    this.startCoord = new Point(mapPoint.getLatitude(), mapPoint.getLongitude());
+
+                    startLabel.setText(String.format("Start: %.5f, %.5f", this.startCoord.lat, this.startCoord.lon));
+
+                    Point startNearest = this.graph.findNearestNode(this.startCoord);
                     MarkerRed customLayer1 = new MarkerRed(new MapPoint(startNearest.lat, startNearest.lon),
                             Color.GREEN);
 
                     this.layers.add(customLayer1);
                     this.mapView.addLayer(customLayer1);
                     customLayer1.layoutLayer();
+
+                } else {
+
+                    this.endCoord = new Point(mapPoint.getLatitude(), mapPoint.getLongitude());
+
+                    endLabel.setText(String.format("End: %.5f, %.5f", this.endCoord.lat, this.endCoord.lon));
+
+                    Point startNearest = this.graph.findNearestNode(this.startCoord);
+                    Point endNearest = this.graph.findNearestNode(this.endCoord);
 
                     MarkerRed customLayer2 = new MarkerRed(new MapPoint(endNearest.lat, endNearest.lon),
                             Color.DARKGREEN);
@@ -75,13 +105,12 @@ public class Main extends Application {
                     this.mapView.addLayer(customLayer2);
                     customLayer2.layoutLayer();
 
-                    System.out.println("Start Nearest Points:" + startNearest.lat + " " + startNearest.lon);
-                    System.out.println("End Nearest Points: " + endNearest.lat + " " + endNearest.lon);
-
                     List<List<Point>> result = this.graph.findAllPaths(startNearest.lon,
                             startNearest.lat,
                             endNearest.lon,
                             endNearest.lat);
+
+                    distance.setText(String.format("Distance in Km: %.5f", this.graph.totDistance));
 
                     updateRoadLayer(result);
 
@@ -92,7 +121,12 @@ public class Main extends Application {
             }
         }));
 
-        Scene scene = new Scene(mapView, 1000, 900);
+        StackPane root = new StackPane();
+        root.getChildren().addAll(mapView, infoBox);
+
+        StackPane.setAlignment(infoBox, javafx.geometry.Pos.BOTTOM_RIGHT);
+
+        Scene scene = new Scene(root, 1200, 1000);
         primaryStage.setTitle("AASTU Path Finder");
         primaryStage.setScene(scene);
         primaryStage.show();
