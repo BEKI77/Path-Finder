@@ -34,15 +34,6 @@ AASTU Path Finder is a Java-based application that allows users to interact with
 ## Project Structure
 
 ```bash
-
-lib/
-   | javafx-sdk-17/
-   |  |   lib/
-   |  |   |    javafx.base.jar
-   |  |   |    javafx.fxml.jar
-   |  |   |    javafx.controls.jar
-   |  |   |    javafx.graphics.jar
-   |  |   |    javafx.web.jar
 src/
     main/
       |  java/
