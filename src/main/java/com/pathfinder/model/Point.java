@@ -3,14 +3,14 @@ package com.pathfinder.model;
 import java.util.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-class Point {
+public class Point {
     @JsonProperty
     public double lat;
 
     @JsonProperty
     public double lon;
 
-    Point(double lat, double lon) {
+    public Point(double lat, double lon) {
         this.lat = lat;
         this.lon = lon;
     }

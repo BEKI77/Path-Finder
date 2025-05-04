@@ -11,20 +11,33 @@ repositories {
     mavenCentral()
 }
 
-def javafxSdkPath = file('lib/javafx-sdk-17/lib').absolutePath
+// Detect current OS for JavaFX classifiers
+def os = org.gradle.internal.os.OperatingSystem.current()
+def platform
+if (os.isWindows()) {
+    platform = 'win'
+} else if (os.isMacOsX()) {
+    platform = 'mac'
+} else if (os.isLinux()) {
+    platform = 'linux'
+} else {
+    throw new GradleException("Unsupported OS")
+}
+
+def javafxVersion = '17.0.2'
 
 dependencies {
-    implementation files('lib/javafx-sdk-17/lib/javafx.controls.jar')
-    implementation files('lib/javafx-sdk-17/lib/javafx.web.jar')
-    implementation files('lib/javafx-sdk-17/lib/javafx.base.jar')
-    implementation files('lib/javafx-sdk-17/lib/javafx.fxml.jar')
-    implementation files('lib/javafx-sdk-17/lib/javafx.graphics.jar')
+    implementation "com.gluonhq:maps:2.0.0-ea+6"
+
+    implementation "org.openjfx:javafx-base:${javafxVersion}:${platform}"
+    implementation "org.openjfx:javafx-controls:${javafxVersion}:${platform}"
+    implementation "org.openjfx:javafx-graphics:${javafxVersion}:${platform}"
+    implementation "org.openjfx:javafx-fxml:${javafxVersion}:${platform}"
+    implementation "org.openjfx:javafx-web:${javafxVersion}:${platform}"
+    implementation "org.openjfx:javafx-media:${javafxVersion}:${platform}"
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
 }
-
-
-println(javafxSdkPath)
 
 application {
     mainClass = 'com.pathfinder.Main'
@@ -32,15 +45,14 @@ application {
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += [
-        '--module-path', javafxSdkPath,
-        '--add-modules', 'javafx.controls,javafx.web'
+        '--module-path', configurations.runtimeClasspath.asPath,
+        '--add-modules', 'javafx.controls,javafx.web,javafx.fxml,javafx.media'
     ]
 }
 
-
 run {
     jvmArgs = [
-        '--module-path', javafxSdkPath,
-        '--add-modules', 'javafx.controls,javafx.web'
+        '--module-path', configurations.runtimeClasspath.asPath,
+        '--add-modules', 'javafx.controls,javafx.web,javafx.fxml,javafx.media'
     ]
 }
