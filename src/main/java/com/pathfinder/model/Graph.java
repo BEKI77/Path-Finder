@@ -85,28 +85,24 @@ public class Graph {
         Set<Point> visited = new HashSet<>();
         visited.add(start);
 
-        stack.push(new PathState(start, new ArrayList<>(), 0.0));
+        stack.push(new PathState(start, null, 0.0));
 
         while (!stack.isEmpty()) {
             PathState currentState = stack.pop();
             Point current = currentState.current;
-            List<Point> path = currentState.path;
             double cost = currentState.cost;
-
-            path.add(current);
 
             if (current.equals(end)) {
                 System.out.println(cost);
                 this.totDistance = cost;
-                allPaths.add(path);
+                allPaths.add(currentState.buildPath());
                 return;
             }
 
             for (WightedEdge neighbor : graph.get(current)) {
                 if (!visited.contains(neighbor.target)) {
                     visited.add(neighbor.target);
-                    List<Point> newPath = new ArrayList<>(path);
-                    stack.push(new PathState(neighbor.target, newPath, cost + neighbor.weight));
+                    stack.push(new PathState(neighbor.target, currentState, cost + neighbor.weight));
                 }
             }
         }
@@ -117,30 +113,27 @@ public class Graph {
         PriorityQueue<PathState> pq = new PriorityQueue<>(Comparator.comparingDouble(state -> state.cost));
         Set<Point> visited = new HashSet<>();
 
-        pq.add(new PathState(start, new ArrayList<>(), 0.0));
+        pq.add(new PathState(start, null, 0.0));
 
         while (!pq.isEmpty()) {
             PathState currentState = pq.poll();
             Point current = currentState.current;
-            List<Point> path = currentState.path;
             double cost = currentState.cost;
 
             if (visited.contains(current))
                 continue;
+
             visited.add(current);
 
-            path.add(current);
-
             if (current.equals(end)) {
-                allPaths.add(path);
+                allPaths.add(currentState.buildPath());
                 this.totDistance = cost;
                 return;
             }
 
             for (WightedEdge neighbor : graph.get(current)) {
                 if (!visited.contains(neighbor.target)) {
-                    List<Point> newPath = new ArrayList<>(path);
-                    pq.add(new PathState(neighbor.target, newPath, cost + neighbor.weight));
+                    pq.add(new PathState(neighbor.target, currentState, cost + neighbor.weight));
                 }
             }
         }
@@ -159,12 +152,20 @@ public class Graph {
 
 class PathState {
     Point current;
-    List<Point> path;
+    PathState prev;
     double cost;
 
-    PathState(Point current, List<Point> path, double cost) {
+    PathState(Point current, PathState prev, double cost) {
         this.current = current;
-        this.path = path;
+        this.prev = prev;
         this.cost = cost;
+    }
+
+    List<Point> buildPath() {
+        LinkedList<Point> path = new LinkedList<>();
+        for (PathState s = this; s != null; s = s.prev) {
+            path.addFirst(s.current);
+        }
+        return path;
     }
 }
