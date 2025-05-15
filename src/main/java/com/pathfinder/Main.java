@@ -32,6 +32,7 @@ public class Main extends Application {
     public ArrayNode features;
     public Point startCoord;
     public Point endCoord;
+    private boolean useDijkstra = true;
     Graph graph;
 
     @Override
@@ -46,11 +47,19 @@ public class Main extends Application {
         Label startLabel = new Label("Start: not selected");
         Label endLabel = new Label("End: not selected");
         Label distance = new Label("Distance in Km: 0");
+        Label algoLabel = new Label("Algorithm: Dijkstra");
+
+        javafx.scene.control.Button toggleAlgoBtn = new javafx.scene.control.Button("Toggle Algorithm");
+
+        toggleAlgoBtn.setOnAction(e -> {
+            useDijkstra = !useDijkstra;
+            algoLabel.setText("Algorithm: " + (useDijkstra ? "Dijkstra" : "DFS"));
+        });
 
         startLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
         endLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
 
-        VBox infoBox = new VBox(5, startLabel, endLabel, distance);
+        VBox infoBox = new VBox(5, startLabel, endLabel, distance, algoLabel, toggleAlgoBtn);
 
         infoBox.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9);" +
                 "-fx-padding: 12;" +
@@ -66,7 +75,7 @@ public class Main extends Application {
 
         this.mapView.setOnMouseClicked((event -> {
 
-            if (event.getButton() == javafx.scene.input.MouseButton.PRIMARY) {
+            if (event.getButton() == javafx.scene.input.MouseButton.SECONDARY) {
 
                 Point2D screenPoint = new Point2D(event.getX(), event.getY());
                 MapPoint mapPoint = mapView.getMapPosition(screenPoint.getX(), screenPoint.getY());
@@ -108,7 +117,8 @@ public class Main extends Application {
                     List<List<Point>> result = this.graph.findAllPaths(startNearest.lon,
                             startNearest.lat,
                             endNearest.lon,
-                            endNearest.lat);
+                            endNearest.lat,
+                            useDijkstra);
 
                     distance.setText(String.format("Distance in Km: %.5f", this.graph.totDistance));
 

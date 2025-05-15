@@ -1,13 +1,10 @@
 package com.pathfinder.model;
 
-import java.util.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Objects;
 
 public class Point {
-    @JsonProperty
-    public double lat;
 
-    @JsonProperty
+    public double lat;
     public double lon;
 
     public Point(double lat, double lon) {
@@ -21,6 +18,7 @@ public class Point {
             return false;
         Point p = (Point) o;
         return Double.compare(lat, p.lat) == 0 && Double.compare(lon, p.lon) == 0;
+
     }
 
     @Override
